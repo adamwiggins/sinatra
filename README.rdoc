@@ -451,6 +451,7 @@ Options are:
 
   cd where/you/keep/your/projects
   git clone git://github.com/bmizerany/sinatra.git
+  cd sinatra; git submodule init; git submodule update; cd ..
   cd your_project
   ln -s ../sinatra/
 
