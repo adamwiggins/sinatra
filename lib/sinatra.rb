@@ -869,7 +869,7 @@ module Sinatra
     # (Sinatra::application).
     FORWARD_METHODS = %w[
       get put post delete head template layout before error not_found
-      configures configure set set_options set_option enable disable use
+      configures configure set set_options set_option enable disable use resource
     ]
 
     # Create a new Application with a default configuration taken
@@ -998,21 +998,44 @@ module Sinatra
     # NOTE: The #get, #post, #put, and #delete helper methods should
     # be used to define events when possible.
     def event(method, path, options = {}, &b)
-      events[method].push(Event.new(path, options, &b)).last
+      events[method].push(Event.new(make_path(path), options, &b)).last
+    end
+
+    # Nest resources paths.  Example:
+    #
+    #   resource 'posts' do
+    #     get { 'show all posts' }
+    #     get ':id' { 'show post' }
+    #     put ':id' { 'update post' }
+    #   end
+    def resource(path, &b)
+      orig_path = @path_parts
+      @path_parts ||= []
+      @path_parts << path
+      b.call
+      @path_parts = orig_path
+    end
+
+    def make_path(path)   # :nodoc:
+      return path unless @path_parts
+
+      list = @path_parts
+      list << path if path and path != ''
+      ('/' + list.join('/')).squeeze('/')
     end
 
     # Define an event handler for GET requests.
-    def get(path, options={}, &b)
+    def get(path='', options={}, &b)
       event(:get, path, options, &b)
     end
 
     # Define an event handler for POST requests.
-    def post(path, options={}, &b)
+    def post(path='', options={}, &b)
       event(:post, path, options, &b)
     end
 
     # Define an event handler for HEAD requests.
-    def head(path, options={}, &b)
+    def head(path='', options={}, &b)
       event(:head, path, options, &b)
     end
 
@@ -1021,7 +1044,7 @@ module Sinatra
     # NOTE: PUT events are triggered when the HTTP request method is
     # PUT and also when the request method is POST and the body includes a
     # "_method" parameter set to "PUT".
-    def put(path, options={}, &b)
+    def put(path='', options={}, &b)
       event(:put, path, options, &b)
     end
 
@@ -1030,7 +1053,7 @@ module Sinatra
     # NOTE: DELETE events are triggered when the HTTP request method is
     # DELETE and also when the request method is POST and the body includes a
     # "_method" parameter set to "DELETE".
-    def delete(path, options={}, &b)
+    def delete(path='', options={}, &b)
       event(:delete, path, options, &b)
     end
 

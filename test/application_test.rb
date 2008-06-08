@@ -144,6 +144,30 @@ context "Default Application Configuration" do
 
 end
 
+context "App path building" do
+
+  setup do
+    @app = Sinatra::Application.new
+  end
+
+  specify "make path with no nested resources returns the same string" do
+    @app.make_path('/some/path').should.equal '/some/path'
+  end
+
+  specify "make path with a nested resources prepends the resource" do
+    @app.resource('nest') do
+      @app.make_path('a/b').should.equal '/nest/a/b'
+    end
+  end
+
+  specify "make path with a nested resource but a nil path doesn't have a trailing slash" do
+    @app.resource('nest') do
+      @app.make_path(nil).should.equal '/nest'
+    end
+  end
+
+end
+
 context "Events in an app" do
   
   setup do
@@ -216,6 +240,34 @@ context "Events in an app" do
     body.should.equal "Look ma, a path with spaces!"
   end
   
+  specify "nested resource paths" do
+
+    resource 'post' do
+      get 'comments' do
+        'some comments'
+      end
+    end
+
+    get_it '/post/comments'
+    should.be.ok
+    body.should.equal 'some comments'
+
+  end
+
+  specify "omit path parameter to an event, mainly useful for nested resources" do
+
+    resource 'posts' do
+      get do
+        'all posts'
+      end
+    end
+
+    get_it '/posts'
+    should.be.ok
+    body.should.equal 'all posts'
+
+  end
+
 end
 
 
