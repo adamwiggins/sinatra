@@ -191,6 +191,21 @@ context "Events in an app" do
 
   end
 
+  specify "filters by accept header" do
+
+    get '/', :accept => 'image/jpg' do
+      request.env['HTTP_ACCEPT']
+    end
+
+    get_it '/', :env => { :accept => 'image/jpg' }
+    should.be.ok
+    body.should.equal 'image/jpg'
+
+    get_it '/', :env => { :accept => 'text/html' }
+    should.not.be.ok
+
+  end
+
   specify "can use regex to get parts of user-agent" do
     
     get '/', :agent => /Windows (NT)/ do

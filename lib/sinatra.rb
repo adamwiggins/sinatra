@@ -55,6 +55,10 @@ module Rack #:nodoc:
       @env['HTTP_USER_AGENT']
     end
 
+    def accept
+      @env['HTTP_ACCEPT'].split(',').map { |a| a.strip }
+    end
+
     private
 
       # Return truthfully if and only if the following conditions are met: 1.) the
@@ -183,6 +187,9 @@ module Sinatra
       end
       if host = options[:host] 
         return unless host === request.host
+      end
+      if accept = options[:accept]
+        return unless request.accept.include? accept
       end
       return unless pattern =~ request.path_info.squeeze('/')
       params.merge!(param_keys.zip($~.captures.map(&:from_param)).to_hash)
