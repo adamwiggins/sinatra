@@ -200,6 +200,7 @@ context "Events in an app" do
     get_it '/', :env => { :accept => 'application/xml' }
     should.be.ok
     body.should.equal 'application/xml'
+    headers['Content-Type'].should.equal 'application/xml'
 
     get_it '/', :env => { :accept => 'text/html' }
     should.not.be.ok

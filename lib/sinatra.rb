@@ -95,7 +95,7 @@ module Sinatra
   class NotFound < RuntimeError; end
   class ServerError < RuntimeError; end
 
-  Result = Struct.new(:block, :params, :status) unless defined?(Result)
+  Result = Struct.new(:block, :params, :status, :content_type) unless defined?(Result)
 
   def options
     application.options
@@ -189,7 +189,8 @@ module Sinatra
         return unless host === request.host
       end
       if accept = options[:accept]
-        return unless request.accept.include? lookup_mime(accept)
+        accept = lookup_mime(accept)
+        return unless request.accept.include? accept
       end
       return unless pattern =~ request.path_info.squeeze('/')
       params.merge!(param_keys.zip($~.captures.map(&:from_param)).to_hash)
@@ -198,7 +199,7 @@ module Sinatra
         params.delete_if { |k, v| k =~ /^_splat_\d+$/ }
         params["splat"] = splats
       end
-      Result.new(block, params, 200)
+      Result.new(block, params, 200, accept)
     end
     
   end
@@ -212,7 +213,7 @@ module Sinatra
     end
     
     def invoke(request)
-      Result.new(block, {}, 404)
+      Result.new(block, {}, 404, nil)
     end
     
   end
@@ -223,7 +224,7 @@ module Sinatra
       return unless File.file?(
         Sinatra.application.options.public + request.path_info.http_unescape
       )
-      Result.new(block, {}, 200)
+      Result.new(block, {}, 200, nil)
     end
     
     def block
@@ -1221,6 +1222,7 @@ module Sinatra
       result = lookup(request)
       context = EventContext.new(request, Rack::Response.new, result.params)
       context.status(result.status)
+      context.response.headers['Content-Type'] = result.content_type if result.content_type
       begin
         returned = run_safely do
           catch(:halt) do
