@@ -193,13 +193,13 @@ context "Events in an app" do
 
   specify "filters by accept header" do
 
-    get '/', :accept => 'image/jpg' do
+    get '/', :accept => :xml do
       request.env['HTTP_ACCEPT']
     end
 
-    get_it '/', :env => { :accept => 'image/jpg' }
+    get_it '/', :env => { :accept => 'application/xml' }
     should.be.ok
-    body.should.equal 'image/jpg'
+    body.should.equal 'application/xml'
 
     get_it '/', :env => { :accept => 'text/html' }
     should.not.be.ok

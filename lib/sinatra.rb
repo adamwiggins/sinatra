@@ -189,7 +189,7 @@ module Sinatra
         return unless host === request.host
       end
       if accept = options[:accept]
-        return unless request.accept.include? accept
+        return unless request.accept.include? lookup_mime(accept)
       end
       return unless pattern =~ request.path_info.squeeze('/')
       params.merge!(param_keys.zip($~.captures.map(&:from_param)).to_hash)
@@ -459,8 +459,7 @@ module Sinatra
     #   end
     #
     def content_type(type, params={})
-      type = Rack::File::MIME_TYPES[type.to_s] if type.kind_of?(Symbol)
-      fail "Invalid or undefined media_type: #{type}" if type.nil?
+      type = lookup_mime(type)
       if params.any?
         params = params.collect { |kv| "%s=%s" % kv }.join(', ')
         type = [ type, params ].join(";")
@@ -1389,6 +1388,12 @@ end
 
 def mime(ext, type)
   Rack::File::MIME_TYPES[ext.to_s] = type
+end
+
+def lookup_mime(type)
+  type = Rack::File::MIME_TYPES[type.to_s] if type.kind_of?(Symbol)
+  fail "Invalid or undefined media_type: #{type}" if type.nil?
+  type
 end
 
 ### Misc Core Extensions
