@@ -1225,6 +1225,7 @@ module Sinatra
         body = returned.to_result(context)
       rescue => e
         request.env['sinatra.error'] = e
+        log_error(e)
         context.status(500)
         result = (errors[e.class] || errors[ServerError]).invoke(request)
         returned = run_safely do
@@ -1238,6 +1239,11 @@ module Sinatra
       body = '' if request.request_method.upcase == 'HEAD'
       context.body = body.kind_of?(String) ? [*body] : body
       context.finish
+    end
+
+    def log_error(e)   # :nodoc:
+      STDERR.puts "#{e.class} - #{e.message}"
+      STDERR.puts e.backtrace.join("\n")
     end
 
     # Called immediately after the application is initialized or reloaded to
