@@ -1295,6 +1295,10 @@ end<pre>
 
         error do
           @error = request.env['sinatra.error']
+
+          if request.env['HTTP_ACCEPT'] == 'application/xml'
+            %Q(<?xml version="1.0" encoding="UTF-8"?><errors><error>#{@error.class} - #{@error.message} in #{@error.backtrace.first}</error></errors>)
+          else
           %Q(
           <html>
             <body>
@@ -1341,6 +1345,7 @@ end<pre>
             </body>
           </html>
           )
+          end
         end
       end
     end
